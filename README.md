@@ -1,54 +1,52 @@
-# 🎮 Game Glitch Investigator: The Impossible Guesser
+# 🎮 Game Glitch Investigator
 
-## 🚨 The Situation
+## Purpose
 
-You asked an AI to build a simple "Number Guessing Game" using Streamlit.
-It wrote the code, ran away, and now the game is unplayable. 
+This project is a simple number-guessing game built with Streamlit. The player picks a difficulty level, guesses a number in a target range, and gets hints until they either win or run out of attempts. The goal was to debug and fix a bunch of intentionally broken game behaviors and turn the app into a working, testable project.
 
-- You can't win.
-- The hints lie to you.
-- The secret number seems to have commitment issues.
+## Setup
 
-## 🛠️ Setup
+1. Create and activate a virtual environment if needed.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run the app:
+   ```bash
+   python -m streamlit run app.py
+   ```
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run the broken app: `python -m streamlit run app.py`
+## Bugs found and fixed
 
-## 🕵️‍♂️ Your Mission
+The starter app had several real issues:
 
-1. **Play the game.** Open the "Developer Debug Info" tab in the app to see the secret number. Try to win.
-2. **Find the State Bug.** Why does the secret number change every time you click "Submit"? Ask ChatGPT: *"How do I keep a variable from resetting in Streamlit when I click a button?"*
-3. **Fix the Logic.** The hints ("Higher/Lower") are wrong. Fix them.
-4. **Refactor & Test.** - Move the logic into `logic_utils.py`.
-   - Run `pytest` in your terminal.
-   - Keep fixing until all tests pass!
+- The secret number was resetting on rerun because game state was not managed correctly in Streamlit.
+- The higher/lower hint logic was backwards.
+- New game resets were inconsistent and could leave stale state behind.
+- Attempt counting and score logic were not aligned with the actual game flow.
 
-## 📝 Document Your Experience
+The fixes were applied by:
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+- moving the comparison logic into a clean helper contract in `logic_utils.py`
+- separating outcome detection from user-facing hint text
+- resetting session state properly when difficulty changes or a new game starts
+- counting valid attempts only after a real guess is accepted
 
-## 📸 Demo Walkthrough
+## Demo walkthrough
 
-Describe your fixed game in numbered steps so a reader can follow along without watching a video:
+1. Launch the app and choose a difficulty from the sidebar.
+2. The app shows the allowed range and remaining attempts.
+3. Enter a guess and submit it.
+4. The game returns a correct hint such as “Go LOWER!” or “Go HIGHER!” and updates the score.
+5. When the correct number is guessed, the app shows a win state and resets cleanly when the player clicks New Game.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+## Test results
 
-**Screenshot** *(optional)*: <!-- Insert a screenshot of your fixed, winning game here -->
-
-## 🧪 Test Results
-
-```
-# Paste your pytest output here, e.g.:
-# pytest tests/
-# ========================= X passed in 0.XXs =========================
+```bash
+C:\Users\muham\Desktop\assignment 2 ai found\ai110-module1show-gameglitchinvestigator-starter> python -m pytest -q
+3 passed in 0.02s
 ```
 
-## 🚀 Stretch Features
+## Status
 
-- [ ] [If you choose to complete Challenge 4, describe the Enhanced UI changes here — a screenshot is optional]
+The core game logic is working and the project passes its pytest checks. The app now behaves consistently for valid guesses, invalid input, win states, and game resets.

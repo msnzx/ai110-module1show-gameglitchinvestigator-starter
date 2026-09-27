@@ -1,76 +1,50 @@
 # AI Interactions Log
 
-> **Stretch features only.** Only fill in the sections that apply to stretch features you attempted. If you did not attempt a stretch feature, leave its section blank or delete it. This file is not required for the core project.
+This project did not use a full stretch-feature workflow, but I did use AI to debug and validate the game logic. The main value came from asking for help with the state-reset bug, the reversed hint logic, and the correct contract for helper functions.
 
----
-
-## Agent Workflow (SF8)
-
-> Document your experience using an AI agent (e.g., Cursor Agent, Claude, Copilot) to make multi-step changes autonomously.
-
-**What task did you give the agent?**
-
-<!-- Describe the goal you asked the agent to accomplish -->
-
-**What did the agent do?**
-
-<!-- List the steps the agent took (files edited, commands run, etc.) -->
-
-**What did you have to verify or fix manually?**
-
-<!-- Describe anything the agent got wrong or that required human review -->
-
----
-
-## Test Generation (SF7)
-
-> Document how you used AI to help generate or improve tests.
-
-| Edge Case | Prompt Used | AI-Suggested Test | Did It Pass? | Your Reasoning |
-|-----------|-------------|-------------------|--------------|----------------|
-| | | | | |
-| | | | | |
-| | | | | |
-
----
-
-## Linting & Style (SF9)
-
-> Document your use of AI for linting or code style improvements.
+## Core debugging prompts
 
 **Prompt used:**
 
-```
-<!-- Paste the prompt you gave the AI -->
-```
-
-**Linting output before:**
-
-```
-<!-- Paste relevant linter warnings/errors -->
+```text
+The game is resetting its secret number on rerun and the hints are backwards. Explain the likely Python/Streamlit cause and suggest a clean fix.
 ```
 
-**Changes applied:**
+**AI response summary:**
 
-<!-- Describe what you changed based on the AI's suggestions -->
+The AI identified that Streamlit reruns the script and that session state should be used to keep values like the secret number and attempts across reruns. It also pointed out that the comparison result should be a single outcome string instead of a tuple, which matched the actual bug in the helper contract.
+
+**What I accepted:**
+
+- preserving values in `st.session_state`
+- separating `check_guess()` from user-facing hint text
+- keeping the logic in helper functions so it was easier to test
+
+**What I changed after review:**
+
+I did not keep the full refactor in the app layer; I simplified it to a targeted helper approach in `logic_utils.py` because that kept the code readable and testable.
 
 ---
 
-## Model Comparison (SF11)
+## Test help
 
-> Compare two AI models on the same task.
+**Prompt used:**
 
-**Task given to both models:**
+```text
+Help me write pytest checks for a number guessing game: win case, too high case, and too low case.
+```
 
-<!-- Describe what you asked each model to do -->
+**Result:**
 
-| | Model A | Model B |
-|-|---------|---------|
-| **Model name** | | |
-| **Response summary** | | |
-| **More Pythonic?** | | |
-| **Clearer explanation?** | | |
+I used the generated test structure as a guide and then validated the actual behavior against the project code. The final tests confirm the fix:
 
-**Which did you prefer and why?**
+```bash
+python -m pytest -q
+3 passed in 0.02s
+```
 
-<!-- Your conclusion -->
+---
+
+## Stretch features status
+
+No stretch features were attempted for this submission. The project was completed through the required debugging and documentation work instead of additional UI or advanced AI workflows.
