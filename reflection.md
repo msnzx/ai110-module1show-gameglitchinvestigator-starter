@@ -19,19 +19,15 @@ The first run showed a game that looked functional from the outside, but the res
 
 ## 2. How did I use AI as a teammate?
 
-I used Copilot as a debugging assistant while I checked the logic and tested my fixes. One AI suggestion I accepted was the idea to separate outcome detection from display text, which made sense because the app needed a clean comparison result and a separate user-facing hint. I verified that this was correct by running the unit tests and checking that the output matched the expected guess behavior.
+I used Copilot as a debugging teammate and checked its suggestions against the code and tests. I accepted the suggestion to align win scoring with the attempt count passed by `app.py`. The app increments the count before calling `update_score`, so the first winning attempt is attempt 1; the old extra `+ 1` reduced its award by ten more points than the formula intended. I added a test asserting that a first-attempt win awards 90 points.
 
-One suggestion I did not accept as written was a broader redesign that kept all logic inside the Streamlit app and used heavier rerun-based state handling. It was plausible, but it was too complicated for this small project and made the code harder to test. I simplified it by keeping the comparison rules in `logic_utils.py` and using a small, explicit `get_hint_message` helper, which made the logic easier to reason about and verify.
+I did not apply the prompt's example suggestion to change the high/low comparison. Inspection showed `check_guess` already returns `"Too High"` for 60 versus 50 and `"Too Low"` for 40 versus 50, and the existing tests cover both results. Changing that logic would have broken working behavior. Instead, I fixed the separate New Game score reset and added a Streamlit app test to verify the score returns to zero.
 
 ---
 
 ## 3. Debugging and testing my fixes
 
-I decided a bug was really fixed when the behavior matched the expected result in a real test and the game flow remained stable after a rerun. I ran `pytest` after each major fix so I could confirm that the logic contract was correct rather than only looking at the rendered UI.
-
-The most useful test was the core comparison test suite because it checked the real contract of `check_guess()`: win, too high, and too low. The tests showed the bug clearly because the helper returned a tuple instead of the expected simple outcome string, which also explained why the app was behaving inconsistently.
-
-AI helped me think about what to test, especially around “wrong branch” logic and the need to separate raw comparison results from hint strings. That made the testing process much more targeted than just checking the UI one click at a time.
+I used focused pytest cases to verify the fixes as well as the existing `check_guess()` outcomes. The scoring test checks the exact first-attempt award, and the Streamlit `AppTest` test sets a nonzero score, clicks New Game, and confirms that the score is reset. The existing comparison tests continue to verify win, too-high, and too-low results.
 
 ---
 

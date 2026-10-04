@@ -87,6 +87,8 @@ if new_game:
     st.session_state.secret = random.randint(low, high)
     st.session_state.status = "playing"
     st.session_state.history = []
+    st.session_state.score = 0
+    # FIX: AI-assisted review confirmed a new game must start with a fresh score.
     st.success("New game started.")
     st.rerun()
 

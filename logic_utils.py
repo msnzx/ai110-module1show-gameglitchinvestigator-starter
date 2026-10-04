@@ -64,7 +64,8 @@ def get_hint_message(outcome: str):
 def update_score(current_score: int, outcome: str, attempt_number: int):
     """Update score based on outcome and attempt number."""
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        # FIX: AI-assisted review aligned the one-based attempt count with the win bonus.
+        points = 100 - 10 * attempt_number
 
         if points < 10:
             points = 10
