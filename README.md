@@ -18,35 +18,32 @@ This project is a simple number-guessing game built with Streamlit. The player p
 
 ## Bugs found and fixed
 
-The starter app had several real issues:
+The debugging work identified and addressed these game issues:
 
-- The secret number was resetting on rerun because game state was not managed correctly in Streamlit.
-- The higher/lower hint logic was backwards.
-- New game resets were inconsistent and could leave stale state behind.
-- Attempt counting and score logic were not aligned with the actual game flow.
+- Starting a new game did not reset the score.
+- Win scoring applied an extra attempt offset even though the app passes a one-based attempt number.
 
-The fixes were applied by:
+The comparison behavior is handled by `check_guess()` in `logic_utils.py`; its too-high and too-low behavior was already correct, so it was retained and kept covered by tests.
 
-- moving the comparison logic into a clean helper contract in `logic_utils.py`
-- separating outcome detection from user-facing hint text
-- resetting session state properly when difficulty changes or a new game starts
-- counting valid attempts only after a real guess is accepted
+## Demo Walkthrough
 
-## Demo walkthrough
-
-1. Launch the app and choose a difficulty from the sidebar.
-2. The app shows the allowed range and remaining attempts.
-3. Enter a guess and submit it.
-4. The game returns a correct hint such as “Go LOWER!” or “Go HIGHER!” and updates the score.
-5. When the correct number is guessed, the app shows a win state and resets cleanly when the player clicks New Game.
+For this example, choose Normal difficulty and assume the secret number is 50:
+1. Enter `40`. The game reports “Too Low” and “Go HIGHER!”; the score changes from 0 to -5.
+2. Enter `70`. The game reports “Too High” and “Go LOWER!”; the score changes from -5 to 0.
+3. Enter `50`. The game reports a win and awards 70 points for the third attempt.
+4. Click “New Game”. The game starts again with zero attempts and a reset score.
 
 ## Test results
 
 ```bash
-C:\Users\muham\Desktop\assignment 2 ai found\ai110-module1show-gameglitchinvestigator-starter> python -m pytest -q
-3 passed in 0.02s
+.....                                                                    [100%]
+5 passed in 2.37s
 ```
 
-## Status
+The suite includes the original win/high/low comparison tests, a first-attempt scoring regression test, and a Streamlit `AppTest` that checks the New Game score reset. The app was also started locally and its Streamlit health endpoint returned `HTTP 200: ok`.
 
-The core game logic is working and the project passes its pytest checks. The app now behaves consistently for valid guesses, invalid input, win states, and game resets.
+## Document Your Experience
+
+I used AI to help inspect the game rules and suggest targeted tests, but checked each suggestion against the implementation before accepting it. I kept the existing high/low comparison logic because its tests already demonstrated the expected results. I accepted fixes for the score carry-over and the extra win-score attempt offset, then verified them with regression tests.
+
+This project reinforced that an AI suggestion is a hypothesis, not proof. Reading the caller and helper together revealed that `attempt_number` is already incremented before scoring. A small test for the exact first-attempt award and an app-level test for starting a new game made both changes verifiable. The textual walkthrough records the example flow without relying on a screenshot or recording.

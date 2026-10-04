@@ -1,19 +1,19 @@
 # 💭 Reflection: Game Glitch Investigator
 
-The game looked broken when I first ran it. The app loaded, but the number guessing flow was inconsistent and the hint messages contradicted the actual comparison logic. I had to treat it like a debugging exercise instead of just a UI polish task, because several issues were caused by the same root problem: game state was getting reset in the wrong places and the helper functions were returning the wrong shape of data.
+I approached the project as a debugging exercise rather than assuming that every suspected issue was a real bug. I checked the game rules against the implementation and tests, then focused the final fixes on the behaviors that could be verified.
 
 ## 1. What was broken when you started?
 
-The first run showed a game that looked functional from the outside, but the results were wrong in obvious ways. The secret number changed unexpectedly, the hints told the player the opposite direction, and the new-game flow did not behave consistently. This made it impossible to trust the game state or the feedback shown to the user.
+The comparison tests already matched the expected outcomes, so I did not treat the high/low behavior as a confirmed bug. The reproducible issues addressed in this pass were the win-score calculation and the New Game score reset.
 
 **Bug Reproduction Log**
 
 | Input | Expected Behavior | Actual Behavior | Console Output / Error |
 |-------|-------------------|-----------------|------------------------|
-| Guess 60 when secret is 50 | “Too High” result | App reported the player was too low and should go higher | Logic returned reversed comparison |
-| Guess 40 when secret is 50 | “Too Low” result | App reported the player was too high and should go lower | Hint text contradicted comparison |
-| Click New Game after a win | Start a fresh game with a new secret | Secret and attempt state were inconsistent and sometimes stale | Streamlit reruns reset state incorrectly |
-| Submit a valid guess | Attempt counter updates once | Invalid or inconsistent user flow could drift from the intended count | Game state not managed reliably |
+| Win on attempt 1 | Award 90 points | Old formula awarded 80 points | Win formula added an extra attempt offset |
+| Click New Game after earning points | Start a fresh game with score 0 | Previous score remained in session state | New-game handler did not reset score |
+| Guess 60 when secret is 50 | Return “Too High” | `check_guess(60, 50)` returns “Too High” | Existing behavior; verified by test |
+| Guess 40 when secret is 50 | Return “Too Low” | `check_guess(40, 50)` returns “Too Low” | Existing behavior; verified by test |
 
 ---
 
@@ -27,20 +27,22 @@ I did not apply the prompt's example suggestion to change the high/low compariso
 
 ## 3. Debugging and testing my fixes
 
-I used focused pytest cases to verify the fixes as well as the existing `check_guess()` outcomes. The scoring test checks the exact first-attempt award, and the Streamlit `AppTest` test sets a nonzero score, clicks New Game, and confirms that the score is reset. The existing comparison tests continue to verify win, too-high, and too-low results.
+I used focused pytest cases to verify the fixes as well as the existing `check_guess()` outcomes. The scoring test checks that a first-attempt win awards 90 points. The Streamlit `AppTest` test sets a nonzero score, clicks New Game, and confirms that the score is reset. The comparison tests continue to verify win, too-high, and too-low results.
+
+The final test run was `python -m pytest -q`: 5 tests passed. I also started the app with Streamlit and checked its health endpoint, which returned `HTTP 200: ok`. The README's sample walkthrough follows the actual score changes for guesses 40, 70, and 50 when the secret is 50.
 
 ---
 
 ## 4. What I learned about Streamlit and state
 
-Streamlit reruns the script every time the app updates, which means variables in normal Python memory are recreated unless they are stored in `st.session_state`. I explained this to myself as a state reset problem: the app was acting as if the secret number had to be regenerated every time a button was pressed, which is exactly what happens when the state is not preserved.
+Streamlit reruns the script every time the app updates, which means variables in normal Python memory are recreated unless they are stored in `st.session_state`. The secret number, attempts, score, status, and history therefore need to be managed as session state so a rerun does not start an unrelated game.
 
-Session state is important because it keeps the game’s current secret, attempts, score, and status across reruns. Without that, the app appears random and inconsistent because it is effectively reinitializing itself during each interaction. Once I stored the values correctly, the game became stable and predictable.
+This debugging pass also showed that resetting a game means resetting all of its related state, not just its secret and attempt count. The score needs to reset with the rest of the game, or points from the previous game leak into the next one.
 
 ---
 
 ## 5. Looking ahead: my developer habits
 
-One habit I want to reuse is writing a small test first for a game rule before changing the code. That gave me a clean target and prevented me from guessing at the fix. I also want to keep AI suggestions scoped to the actual bug instead of accepting a larger refactor unless it clearly improves readability and testability.
+One habit I want to reuse is writing a small test for the exact behavior before changing code. The score and New Game regressions gave me concrete checks, while the existing comparison tests stopped me from “fixing” behavior that was already correct. I also want to keep AI suggestions scoped to the actual bug instead of accepting a larger refactor unless it clearly improves readability and testability.
 
-Next time, I would be more explicit with the AI about the exact function contract I want, such as “return a single outcome string, not a tuple,” because that reduces confusion. This project changed the way I think about AI-generated code: it can be useful and fast, but it still needs verification, testing, and judgment before it is trustworthy.
+Next time, I would provide the AI with the relevant function contract and caller behavior up front, and ask it to propose a regression test alongside any fix. This project changed how I think about AI-generated code: it can help me investigate and move quickly, but it still needs verification, testing, and my judgment before I trust it.
